@@ -1,34 +1,73 @@
 import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import { useAuth } from '../context/AuthContext';
+import api from '../api/client';
 import '../auth.css';
 
+const API_BASE_URL = 'http://localhost:3000';
+
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
+  const navigate = useNavigate();
   const [firstName, setFirstName] = useState(user?.name?.split(' ')[0] ?? '');
   const [lastName, setLastName] = useState(user?.name?.split(' ').slice(1).join(' ') ?? '');
-  const [role, setRole] = useState(user?.role ?? '');
+  const role = user?.role ?? '';
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [saveMessage, setSaveMessage] = useState('');
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml'];
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+  const avatarDisplay = avatarPreview
+    ?? (user?.avatarUrl ? `${API_BASE_URL}${user.avatarUrl}` : null);
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setSaveMessage('Please upload an SVG, PNG, JPG, or GIF file.');
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      setSaveMessage('File is too large. Maximum size is 5MB.');
+      return;
+    }
+
+    setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
   }
 
   function handleCancel() {
-    setFirstName(user?.name?.split(' ')[0] ?? '');
-    setLastName(user?.name?.split(' ').slice(1).join(' ') ?? '');
-    setRole(user?.role ?? '');
-    setAvatarPreview(null);
-    setSaveMessage('');
+    navigate(-1);
   }
 
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setSaveMessage('Profile updates aren\u2019t saved to the server yet \u2014 this form is UI-only until that endpoint is built.');
+    setSaving(true);
+    setSaveMessage('');
+
+    try {
+      const formData = new FormData();
+      formData.append('firstName', firstName);
+      formData.append('lastName', lastName);
+      if (avatarFile) formData.append('avatar', avatarFile);
+
+      const res = await api.patch('/auth/me', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      updateUser(res.data);
+      navigate(-1);
+    } catch (err: any) {
+      setSaveMessage(err.response?.data?.message ?? 'Something went wrong while saving.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -58,12 +97,12 @@ export default function Settings() {
         <input className="auth-input" value={user?.email ?? ''} readOnly />
 
         <label className="auth-label">Role</label>
-        <input className="auth-input" value={role} onChange={(e) => setRole(e.target.value)} />
+        <input className="auth-input" value={role} readOnly />
 
         <div className="settings-avatar-row">
           <div className="settings-avatar-preview">
-            {avatarPreview ? (
-              <img src={avatarPreview} alt="Avatar preview" className="settings-avatar-img" />
+            {avatarDisplay ? (
+              <img src={avatarDisplay} alt="Avatar preview" className="settings-avatar-img" />
             ) : (
               firstName.charAt(0).toUpperCase() || '?'
             )}
@@ -83,7 +122,9 @@ export default function Settings() {
 
         <div className="settings-actions">
           <button type="button" className="btn btn-outline" onClick={handleCancel}>Cancel</button>
-          <button type="submit" className="btn-save">Save changes</button>
+          <button type="submit" className="btn-save" disabled={saving}>
+            {saving ? 'Saving...' : 'Save changes'}
+          </button>
         </div>
       </form>
     </div>

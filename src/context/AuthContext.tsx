@@ -6,6 +6,7 @@ interface User {
   name: string;
   email: string;
   role: string;
+  avatarUrl?: string | null;
 }
 
 interface AuthContextType {
@@ -15,6 +16,7 @@ interface AuthContextType {
   logout: () => void;
   forgotPassword: (email: string) => Promise<any>;
   resetPassword: (token: string, newPassword: string) => Promise<any>;
+  updateUser: (updatedFields: Partial<User>) => void;
   isAuthenticated: boolean;
 }
 
@@ -68,9 +70,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return res.data;
   }
 
+  function updateUser(updatedFields: Partial<User>) {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...updatedFields };
+      const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
+      storage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, login, signup, logout, forgotPassword, resetPassword, isAuthenticated: !!user }}
+      value={{ user, login, signup, logout, forgotPassword, resetPassword, updateUser, isAuthenticated: !!user }}
     >
       {children}
     </AuthContext.Provider>

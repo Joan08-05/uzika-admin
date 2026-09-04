@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+const API_BASE_URL = 'http://localhost:3000';
+
 interface PageHeaderProps {
   title: string;
   rightContent?: ReactNode;
@@ -29,6 +31,8 @@ export default function PageHeader({ title, rightContent }: PageHeaderProps) {
     navigate('/login');
   }
 
+  const avatarSrc = user?.avatarUrl ? `${API_BASE_URL}${user.avatarUrl}` : null;
+
   return (
     <div className="page-header">
       <div className="page-title-row">
@@ -43,7 +47,13 @@ export default function PageHeader({ title, rightContent }: PageHeaderProps) {
         {rightContent}
         <div className="profile-chip-wrapper" ref={menuRef}>
           <button className="profile-chip" onClick={() => setMenuOpen(o => !o)}>
-            <div className="profile-avatar">{user?.name?.charAt(0).toUpperCase() ?? '?'}</div>
+            <div className="profile-avatar">
+              {avatarSrc ? (
+                <img src={avatarSrc} alt="Profile" className="profile-avatar-img" />
+              ) : (
+                user?.name?.charAt(0).toUpperCase() ?? '?'
+              )}
+            </div>
             <div className="profile-text">
               <div className="profile-name">{user?.name ?? 'Unknown'}</div>
               <div className="profile-role">{user?.role ?? ''}</div>
