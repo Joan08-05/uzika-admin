@@ -37,6 +37,14 @@ function IconReports() {
     </svg>
   );
 }
+function IconAdmins() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
 function IconSettings() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -54,16 +62,18 @@ function IconLogout() {
 }
 
 export default function Sidebar() {
-  const { logout } = useAuth();
+  const { logout, hasPermission, user } = useAuth();
   const navigate = useNavigate();
 
-  const navItems = [
-    { label: 'Dashboard', path: '/', icon: <IconDashboard /> },
-    { label: 'Orders', path: '/orders', icon: <IconOrders /> },
-    { label: 'Vendors', path: '/vendors', icon: <IconVendors /> },
-    { label: 'Customers', path: '/customers', icon: <IconCustomers /> },
-    { label: 'Reports', path: '/reports', icon: <IconReports /> },
+  const allNavItems = [
+    { label: 'Dashboard', path: '/', icon: <IconDashboard />, key: 'dashboard' },
+    { label: 'Orders', path: '/orders', icon: <IconOrders />, key: 'orders' },
+    { label: 'Vendors', path: '/vendors', icon: <IconVendors />, key: 'vendors' },
+    { label: 'Customers', path: '/customers', icon: <IconCustomers />, key: 'customers' },
+    { label: 'Reports', path: '/reports', icon: <IconReports />, key: 'reports' },
   ];
+
+  const navItems = allNavItems.filter((item) => hasPermission(item.key));
 
   function handleLogout() {
     logout();
@@ -93,6 +103,14 @@ export default function Sidebar() {
             </span>
           </NavLink>
         ))}
+        {user?.role === 'SuperAdmin' && (
+          <NavLink
+            to="/admins"
+            className={({ isActive }) => (isActive ? 'nav-item nav-item-active' : 'nav-item')}
+          >
+            <span className="nav-item-content"><IconAdmins /><span>Admins</span></span>
+          </NavLink>
+        )}
       </nav>
 
       <div className="sidebar-bottom">

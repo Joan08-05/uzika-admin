@@ -84,6 +84,7 @@ export interface Vendor {
   kycStatus: 'verified' | 'pending';
   suspendedReason?: string;
   suspendedDate?: string;
+  isOpen: boolean;
 }
 
 const LOCATIONS = [
@@ -113,6 +114,7 @@ function generateActiveVendors(count: number): Vendor[] {
       status: 'active',
       settledToday: i % 4 === 0,
       kycStatus: 'verified',
+      isOpen: true,
     });
   }
   return list;
@@ -120,11 +122,11 @@ function generateActiveVendors(count: number): Vendor[] {
 
 export const vendors: Vendor[] = [
   ...generateActiveVendors(28),
-  { name: 'Chips Kona Mbezi', phone: '+255 713 222 111', location: 'Mbezi Beach', rating: 0, orders: 0, balance: 0, commission: 8, status: 'application', settledToday: false, kycStatus: 'pending' },
-  { name: 'Dada Chips Tabata', phone: '+255 719 444 333', location: 'Tabata', rating: 0, orders: 0, balance: 0, commission: 8, status: 'application', settledToday: false, kycStatus: 'pending' },
-  { name: 'Fresh Chips Kigamboni', phone: '+255 717 555 999', location: 'Kigamboni', rating: 0, orders: 0, balance: 0, commission: 8, status: 'application', settledToday: false, kycStatus: 'pending' },
-  { name: 'Chips Express Buguruni', phone: '+255 713 888 000', location: 'Buguruni', rating: 3.1, orders: 18, balance: 42000, commission: 8, status: 'suspended', settledToday: false, kycStatus: 'verified', suspendedReason: 'Hygiene complaint', suspendedDate: 'leo' },
-  { name: 'Kimoka Chips Point', phone: '+255 714 222 555', location: 'Manzese', rating: 2.8, orders: 9, balance: 15000, commission: 8, status: 'suspended', settledToday: false, kycStatus: 'verified', suspendedReason: 'Fraud flag', suspendedDate: 'juzi' },
+  { name: 'Chips Kona Mbezi', phone: '+255 713 222 111', location: 'Mbezi Beach', rating: 0, orders: 0, balance: 0, commission: 8, status: 'application', settledToday: false, kycStatus: 'pending', isOpen: true },
+  { name: 'Dada Chips Tabata', phone: '+255 719 444 333', location: 'Tabata', rating: 0, orders: 0, balance: 0, commission: 8, status: 'application', settledToday: false, kycStatus: 'pending', isOpen: true },
+  { name: 'Fresh Chips Kigamboni', phone: '+255 717 555 999', location: 'Kigamboni', rating: 0, orders: 0, balance: 0, commission: 8, status: 'application', settledToday: false, kycStatus: 'pending', isOpen: true },
+  { name: 'Chips Express Buguruni', phone: '+255 713 888 000', location: 'Buguruni', rating: 3.1, orders: 18, balance: 42000, commission: 8, status: 'suspended', settledToday: false, kycStatus: 'verified', suspendedReason: 'Hygiene complaint', suspendedDate: 'leo', isOpen: false },
+  { name: 'Kimoka Chips Point', phone: '+255 714 222 555', location: 'Manzese', rating: 2.8, orders: 9, balance: 15000, commission: 8, status: 'suspended', settledToday: false, kycStatus: 'verified', suspendedReason: 'Fraud flag', suspendedDate: 'juzi', isOpen: false },
 ];
 
 export interface Customer {

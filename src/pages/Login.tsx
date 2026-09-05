@@ -35,24 +35,28 @@ export default function Login() {
 
         <form onSubmit={handleSubmit}>
           <label className="auth-label">Email</label>
-          <input
-            className="auth-input"
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+            <input
+              className="auth-input"
+              type="email"
+              name="email"
+              autoComplete="username"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
 
           <label className="auth-label">Password</label>
-          <input
-            className="auth-input"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+            <input
+              className="auth-input"
+              type="password"
+              name="password"
+              autoComplete="current-password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
 
           <p className="auth-error">{error || '\u00A0'}</p>
 
@@ -78,9 +82,6 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="auth-footer">
-          Don't have an account? <Link to="/signup">Sign up</Link>
-        </p>
       </div>
     </div>
   );

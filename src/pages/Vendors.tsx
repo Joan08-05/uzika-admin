@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import PageHeader from '../components/PageHeader';
+import Toggle from '../components/Toggle';
 import { useSearchParams } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 
@@ -8,7 +9,7 @@ type Tab = 'active' | 'application' | 'suspended' | 'rejected';
 const PAGE_SIZE = 10;
 
 export default function Vendors() {
-  const { vendors, complaints, updateVendorStatus, markVendorSettled } = useData();
+  const { vendors, complaints, updateVendorStatus, markVendorSettled, toggleVendorOpen } = useData();
   const [searchParams] = useSearchParams();
   const initialTab = (searchParams.get('tab') as Tab) || 'active';
   const [tab, setTab] = useState<Tab>(initialTab);
@@ -83,7 +84,7 @@ export default function Vendors() {
             <table>
               <thead>
                 <tr>
-                  <th>Vendor</th><th>Namba za simu</th><th>Rating</th><th>Order leo</th><th>Balance</th><th>Location</th><th>Hatua</th>
+                  <th>Vendor</th><th>Namba za simu</th><th>Rating</th><th>Order </th><th>Balance</th><th>Location</th><th>Open (admin override)</th><th>Hatua</th>
                 </tr>
               </thead>
               <tbody>
@@ -95,6 +96,9 @@ export default function Vendors() {
                     <td>{v.orders}</td>
                     <td>TZS {v.balance.toLocaleString()}</td>
                     <td>{v.location}</td>
+                    <td>
+                      <Toggle checked={(v as any).isOpen} onChange={() => toggleVendorOpen(v.name)} />
+                    </td>
                     <td>
                       <div className="hatua-cell">
                         <button

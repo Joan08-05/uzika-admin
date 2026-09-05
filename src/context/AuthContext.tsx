@@ -7,6 +7,7 @@ interface User {
   email: string;
   role: string;
   avatarUrl?: string | null;
+  permissions?: Record<string, boolean> | null;
 }
 
 interface AuthContextType {
@@ -17,6 +18,8 @@ interface AuthContextType {
   forgotPassword: (email: string) => Promise<any>;
   resetPassword: (token: string, newPassword: string) => Promise<any>;
   updateUser: (updatedFields: Partial<User>) => void;
+  loginWithToken: (token: string, userData: User) => void;
+  hasPermission: (key: string) => boolean;
   isAuthenticated: boolean;
 }
 
@@ -80,9 +83,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }
 
+  function loginWithToken(token: string, userData: User) {
+    saveSession(token, userData, true);
+  }
+
+  function hasPermission(key: string) {
+    if (!user) return false;
+    if (user.role === 'SuperAdmin') return true;
+    return !!user.permissions?.[key];
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, login, signup, logout, forgotPassword, resetPassword, updateUser, isAuthenticated: !!user }}
+      value={{
+        user,
+        login,
+        signup,
+        logout,
+        forgotPassword,
+        resetPassword,
+        updateUser,
+        loginWithToken,
+        hasPermission,
+        isAuthenticated: !!user,
+      }}
     >
       {children}
     </AuthContext.Provider>
