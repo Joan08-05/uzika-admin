@@ -81,10 +81,10 @@ export default function Vendors() {
       {tab === 'active' && (
         <>
           <div className="card">
-            <table>
+            <table className="vendors-table">
               <thead>
                 <tr>
-                  <th>Vendor</th><th>Namba za simu</th><th>Rating</th><th>Order </th><th>Balance</th><th>Location</th><th>Open (admin override)</th><th>Hatua</th>
+                  <th>Vendor</th><th>Namba za simu</th><th>Rating</th><th>Order leo</th><th>Balance</th><th>Location</th><th>Open</th><th>Hatua</th>
                 </tr>
               </thead>
               <tbody>

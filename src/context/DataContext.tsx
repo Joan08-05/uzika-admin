@@ -1,37 +1,54 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import {
-  orders as initialOrders,
-  customers as initialCustomers,
-  complaints as initialComplaints,
-} from '../data/mockData';
+import { complaints as initialComplaints } from '../data/mockData';
 import type { Order, Vendor, Customer, Complaint } from '../data/mockData';
 import api from '../api/client';
 
 interface DataContextType {
   orders: Order[];
+  ordersLoading: boolean;
+  ordersError: string;
   vendors: Vendor[];
   vendorsLoading: boolean;
   vendorsError: string;
   customers: Customer[];
+  customersLoading: boolean;
+  customersError: string;
   complaints: Complaint[];
   updateVendorStatus: (name: string, status: Vendor['status'], reason?: string) => Promise<void>;
   markVendorSettled: (name: string) => Promise<void>;
   toggleVendorOpen: (name: string) => Promise<void>;
-  toggleCustomerSuspend: (name: string) => void;
-  markCustomerRefunded: (name: string) => void;
-  issueOrderRefund: (id: string) => void;
+  toggleCustomerSuspend: (name: string) => Promise<void>;
+  markCustomerRefunded: (name: string) => Promise<void>;
+  issueOrderRefund: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState('');
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [vendorsLoading, setVendorsLoading] = useState(true);
   const [vendorsError, setVendorsError] = useState('');
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customersLoading, setCustomersLoading] = useState(true);
+  const [customersError, setCustomersError] = useState('');
   const [complaints] = useState<Complaint[]>(initialComplaints);
+
+  async function loadOrders() {
+    setOrdersLoading(true);
+    setOrdersError('');
+    try {
+      const res = await api.get('/orders');
+      setOrders(res.data);
+    } catch (err: any) {
+      setOrdersError(err.response?.data?.message ?? 'Failed to load orders.');
+    } finally {
+      setOrdersLoading(false);
+    }
+  }
 
   async function loadVendors() {
     setVendorsLoading(true);
@@ -46,8 +63,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function loadCustomers() {
+    setCustomersLoading(true);
+    setCustomersError('');
+    try {
+      const res = await api.get('/customers');
+      setCustomers(res.data);
+    } catch (err: any) {
+      setCustomersError(err.response?.data?.message ?? 'Failed to load customers.');
+    } finally {
+      setCustomersLoading(false);
+    }
+  }
+
   useEffect(() => {
+    loadOrders();
     loadVendors();
+    loadCustomers();
   }, []);
 
   async function updateVendorStatus(name: string, status: Vendor['status'], reason?: string) {
@@ -83,24 +115,44 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  function toggleCustomerSuspend(name: string) {
-    setCustomers(prev =>
-      prev.map(c => (c.name === name ? { ...c, status: c.status === 'active' ? 'suspended' : 'active' } : c))
-    );
+  async function toggleCustomerSuspend(name: string) {
+    const customer = customers.find(c => c.name === name) as any;
+    if (!customer) return;
+    const newStatus = customer.status === 'active' ? 'suspended' : 'active';
+    try {
+      const res = await api.patch(`/customers/${customer.id}/status`, { status: newStatus });
+      setCustomers(prev => prev.map(c => ((c as any).id === customer.id ? res.data : c)));
+    } catch (err: any) {
+      alert(err.response?.data?.message ?? 'Failed to update customer status.');
+    }
   }
 
-  function markCustomerRefunded(name: string) {
-    setCustomers(prev => prev.map(c => (c.name === name ? { ...c, refunded: true } : c)));
+  async function markCustomerRefunded(name: string) {
+    const customer = customers.find(c => c.name === name) as any;
+    if (!customer) return;
+    try {
+      const res = await api.patch(`/customers/${customer.id}/refund`, {});
+      setCustomers(prev => prev.map(c => ((c as any).id === customer.id ? res.data : c)));
+    } catch (err: any) {
+      alert(err.response?.data?.message ?? 'Failed to mark customer as refunded.');
+    }
   }
 
-  function issueOrderRefund(id: string) {
-    setOrders(prev => prev.map(o => (o.id === id ? { ...o, refundIssued: true } : o)));
+  async function issueOrderRefund(id: string) {
+    try {
+      const res = await api.patch(`/orders/${id}/refund`, {});
+      setOrders(prev => prev.map(o => (o.id === id ? res.data : o)));
+    } catch (err: any) {
+      alert(err.response?.data?.message ?? 'Failed to issue refund.');
+    }
   }
 
   return (
     <DataContext.Provider
       value={{
-        orders, vendors, vendorsLoading, vendorsError, customers, complaints,
+        orders, ordersLoading, ordersError,
+        vendors, vendorsLoading, vendorsError,
+        customers, customersLoading, customersError, complaints,
         updateVendorStatus, markVendorSettled, toggleVendorOpen,
         toggleCustomerSuspend, markCustomerRefunded, issueOrderRefund,
       }}

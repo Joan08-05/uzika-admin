@@ -245,6 +245,7 @@ body {
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   padding: 20px;
+  overflow-x: auto;
 }
 
 table {
@@ -409,6 +410,33 @@ td {
   display: flex;
   align-items: center;
   gap: 14px;
+}
+
+.vendors-table {
+  table-layout: auto;
+  width: 100%;
+}
+
+.vendors-table th,
+.vendors-table td {
+  padding: 14px 12px;
+  white-space: nowrap;
+}
+
+.vendors-table td {
+  vertical-align: middle;
+}
+
+.vendors-table .hatua-cell {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  justify-content: center;
+}
+
+.vendors-table td:last-child,
+.vendors-table th:last-child {
+  text-align: center;
 }
 
 .orders-layout { display: flex; gap: 20px; align-items: flex-start; }
