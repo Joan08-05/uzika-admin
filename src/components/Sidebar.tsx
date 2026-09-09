@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import logo from '../assets/uzika-logo.png';
 
 function IconDashboard() {
   return (
@@ -83,12 +84,8 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
-        <div className="logo-badge">U</div>
-        <div>
-          <div className="logo-title">UZIKA</div>
-          <div className="logo-subtitle">BACKOFFICE</div>
-        </div>
-      </div>
+      <img src={logo} alt="ÚZIKA" className="brand-logo-img" />
+    </div>
 
       <nav className="sidebar-nav">
         {navItems.map((item) => (

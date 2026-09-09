@@ -15,6 +15,8 @@ import Customers from './pages/Customers';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Admins from './pages/Admins';
+import Complaints from './pages/Complaints';
+import Refunds from './pages/Refunds';
 
 export default function App() {
   return (
@@ -40,6 +42,8 @@ export default function App() {
               <Route path="/reports" element={<PermissionRoute permission="reports"><Reports /></PermissionRoute>} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/admins" element={<PermissionRoute permission="admins"><Admins /></PermissionRoute>} />
+              <Route path="/complaints" element={<PermissionRoute permission="orders"><Complaints /></PermissionRoute>} />
+              <Route path="/refunds" element={<PermissionRoute permission="orders"><Refunds /></PermissionRoute>} />
             </Route>
           </Routes>
         </BrowserRouter>

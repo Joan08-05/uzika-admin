@@ -10,6 +10,7 @@ function parseTimeToMinutes(t: string | null): number | null {
 
 export default function Dashboard() {
   const { orders, vendors, customers, complaints } = useData();
+  const recentOrders = orders.slice(0, 4);
   const navigate = useNavigate();
 
   const totalCustomers = customers.length;
@@ -38,9 +39,10 @@ export default function Dashboard() {
     : null;
 
   const pendingApplications = vendors.filter(v => v.status === 'application').length;
-  const vendorComplaints = complaints.filter(c => c.fromType === 'vendor').length;
-  const customerComplaints = complaints.filter(c => c.fromType === 'customer').length;
-  const refundsPending = customers.filter(c => !c.refunded).length;
+  const openComplaints = complaints.filter(c => c.status === 'open');
+  const vendorComplaints = openComplaints.filter(c => c.fromType === 'vendor').length;
+  const customerComplaints = openComplaints.filter(c => c.fromType === 'customer').length;
+  const refundsIssued = orders.filter(o => o.refundIssued).length;
   const settlementsDue = vendors.filter(v => v.status === 'active' && !v.settledToday).length;
 
   const stats: { label: string; value: string; to: string; state?: object }[] = [
@@ -77,7 +79,7 @@ export default function Dashboard() {
           </div>
           <table>
             <tbody>
-              {orders.map(o => (
+              {recentOrders.map(o => (
                 <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => navigate('/orders', { state: { orderId: o.id } })}>
                   <td><span className="order-id-link">#{o.id}</span></td>
                   <td><strong>{o.vendor}</strong></td>
@@ -106,15 +108,15 @@ export default function Dashboard() {
               <span className="icon-circle icon-circle-red">🔔</span>
               <div><strong>Complaints wazi</strong><div className="action-sub">Vendors {vendorComplaints} · Customers {customerComplaints}</div></div>
             </div>
-            <div className="action-count">{complaints.length}</div>
+            <div className="action-count">{openComplaints.length}</div>
           </Link>
 
-          <Link to="/customers" className="action-card">
+          <Link to="/refunds" className="action-card">
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span className="icon-circle icon-circle-blue">🔔</span>
-              <div><strong>Refunds pending</strong><div className="action-sub">Zinahitaji uhakiki</div></div>
+              <div><strong>Refunds</strong><div className="action-sub">Zilizotolewa na admin</div></div>
             </div>
-            <div className="action-count">{refundsPending}</div>
+            <div className="action-count">{refundsIssued}</div>
           </Link>
 
           <Link to="/vendors?tab=active" className="action-card">

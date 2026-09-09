@@ -8,17 +8,44 @@ type Tab = 'active' | 'application' | 'suspended' | 'rejected';
 
 const PAGE_SIZE = 10;
 
+interface SettlementRecord {
+  id: number;
+  mobileMoneyCollected: number;
+  commissionCharged: number;
+  payoutAmount: number;
+  remainingDebtCarried: number;
+  settledByAdminName: string;
+  settledAt: string;
+}
+
 export default function Vendors() {
-  const { vendors, complaints, updateVendorStatus, markVendorSettled, toggleVendorOpen } = useData();
+  const { vendors, complaints, updateVendorStatus, markVendorSettled, toggleVendorOpen, fetchVendorSettlements } = useData();
   const [searchParams] = useSearchParams();
   const initialTab = (searchParams.get('tab') as Tab) || 'active';
   const [tab, setTab] = useState<Tab>(initialTab);
   const [search, setSearch] = useState('');
   const [activePage, setActivePage] = useState(1);
 
+  const [historyVendorName, setHistoryVendorName] = useState<string | null>(null);
+  const [historyRecords, setHistoryRecords] = useState<SettlementRecord[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
   useEffect(() => {
     setActivePage(1);
   }, [search]);
+
+  async function openHistory(name: string) {
+    setHistoryVendorName(name);
+    setHistoryLoading(true);
+    const records = await fetchVendorSettlements(name);
+    setHistoryRecords(records);
+    setHistoryLoading(false);
+  }
+
+  function closeHistory() {
+    setHistoryVendorName(null);
+    setHistoryRecords([]);
+  }
 
   const matchesSearch = (v: { name: string; phone: string }) =>
     v.name.toLowerCase().includes(search.toLowerCase()) || v.phone.includes(search);
@@ -36,7 +63,7 @@ export default function Vendors() {
   const activeTotalPages = Math.max(1, Math.ceil(active.length / PAGE_SIZE));
   const activePageItems = active.slice((activePage - 1) * PAGE_SIZE, activePage * PAGE_SIZE);
 
-  const vendorComplaints = complaints.filter(c => c.fromType === 'vendor').length;
+  const vendorComplaints = complaints.filter(c => c.fromType === 'vendor' && c.status === 'open').length;
   const settlementsDueToday = allActive
     .filter(v => !v.settledToday)
     .reduce((sum, v) => sum + v.balance, 0);
@@ -84,17 +111,26 @@ export default function Vendors() {
             <table className="vendors-table">
               <thead>
                 <tr>
-                  <th>Vendor</th><th>Namba za simu</th><th>Rating</th><th>Order leo</th><th>Balance</th><th>Location</th><th>Open</th><th>Hatua</th>
+                  <th>ID</th><th>Vendor</th><th>Namba za simu</th><th>Rating</th><th>Order leo</th>
+                  <th>Balance</th><th>Commission Owed</th><th>Mobile Money Pending</th>
+                  <th>Location</th><th>Open</th><th>Hatua</th>
                 </tr>
               </thead>
               <tbody>
                 {activePageItems.map(v => (
                   <tr key={v.name}>
-                    <td><strong>{v.name}</strong></td>
+                    <td>{(v as any).id}</td>
+                    <td>
+                      <strong className="vendor-name-clickable" onClick={() => openHistory(v.name)}>
+                        {v.name}
+                      </strong>
+                    </td>
                     <td className="nowrap-cell">{v.phone}</td>
                     <td>{v.rating}</td>
                     <td>{v.orders}</td>
                     <td>TZS {v.balance.toLocaleString()}</td>
+                    <td>TZS {((v as any).commissionOwed ?? 0).toLocaleString()}</td>
+                    <td>TZS {((v as any).mobileMoneyPendingSettlement ?? 0).toLocaleString()}</td>
                     <td>{v.location}</td>
                     <td>
                       <Toggle checked={(v as any).isOpen} onChange={() => toggleVendorOpen(v.name)} />
@@ -191,6 +227,57 @@ export default function Vendors() {
             </div>
           ))}
           {rejected.length === 0 && <p style={{ color: '#9ca3af' }}>No rejected applications.</p>}
+        </div>
+      )}
+
+      {historyVendorName && (
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.45)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+          }}
+          onClick={closeHistory}
+        >
+          <div
+            className="card"
+            style={{ width: 640, maxHeight: '80vh', overflowY: 'auto', background: '#fff' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3>Settlement history — {historyVendorName}</h3>
+              <button className="btn btn-outline" onClick={closeHistory}>Close</button>
+            </div>
+
+            {historyLoading && <p style={{ color: '#9ca3af' }}>Loading...</p>}
+
+            {!historyLoading && historyRecords.length === 0 && (
+              <p style={{ color: '#9ca3af' }}>No settlements recorded yet.</p>
+            )}
+
+            {!historyLoading && historyRecords.length > 0 && (
+              <table className="vendors-table">
+                <thead>
+                  <tr>
+                    <th>Date</th><th>Mobile Money</th><th>Commission</th>
+                    <th>Paid Out</th><th>Debt Carried</th><th>Approved By</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {historyRecords.map(r => (
+                    <tr key={r.id}>
+                      <td>{new Date(r.settledAt).toLocaleString()}</td>
+                      <td>TZS {r.mobileMoneyCollected.toLocaleString()}</td>
+                      <td>TZS {r.commissionCharged.toLocaleString()}</td>
+                      <td>TZS {r.payoutAmount.toLocaleString()}</td>
+                      <td>TZS {r.remainingDebtCarried.toLocaleString()}</td>
+                      <td>{r.settledByAdminName}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       )}
     </div>

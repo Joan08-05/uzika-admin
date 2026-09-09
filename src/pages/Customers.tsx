@@ -23,7 +23,7 @@ export default function Customers() {
   const totalCustomers = customers.length;
   const members = customers.filter(c => c.isMember).length;
   const activeNow = customers.filter(c => c.status === 'active').length;
-  const customerComplaints = complaints.filter(c => c.fromType === 'customer').length;
+  const customerComplaints = complaints.filter(c => c.fromType === 'customer' && c.status === 'open').length;
 
   return (
     <div>
@@ -58,12 +58,13 @@ export default function Customers() {
         <table>
           <thead>
             <tr>
-              <th>Customer Name</th><th>Phone Number</th><th>Orders</th><th>Matumizi</th><th>Pointi</th><th>Status</th><th>Hatua</th>
+              <th>ID</th><th>Customer Name</th><th>Phone Number</th><th>Orders</th><th>Matumizi</th><th>Pointi</th><th>Status</th><th>Hatua</th>
             </tr>
           </thead>
           <tbody>
             {pageItems.map(c => (
               <tr key={c.name}>
+                <td>{(c as any).id}</td>
                 <td><strong>{c.name}</strong></td>
                 <td className="nowrap-cell">{c.phone}</td>
                 <td>{c.orders}</td>

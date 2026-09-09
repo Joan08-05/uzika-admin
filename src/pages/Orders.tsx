@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import { useData } from '../context/DataContext';
 import type { OrderStatus } from '../data/mockData';
+
+const PAGE_SIZE = 10;
 
 export default function Orders() {
   const { orders, issueOrderRefund } = useData();
@@ -14,6 +16,11 @@ export default function Orders() {
   const [activeFilter, setActiveFilter] = useState<OrderStatus | 'All'>(incomingStatusFilter ?? 'All');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(incomingOrderId ?? null);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, activeFilter]);
 
   const filteredOrders = orders
     .filter(o => activeFilter === 'All' || o.status === activeFilter)
@@ -22,6 +29,9 @@ export default function Orders() {
       o.customer.toLowerCase().includes(search.toLowerCase()) ||
       o.id.toLowerCase().includes(search.toLowerCase())
     );
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const pageItems = filteredOrders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const selectedOrder = selectedId ? orders.find(o => o.id === selectedId) ?? null : null;
 
@@ -59,7 +69,7 @@ export default function Orders() {
                 <tr><th>Order</th><th>Vendor</th><th>Customer</th><th>Amount</th><th>Status</th></tr>
               </thead>
               <tbody>
-                {filteredOrders.map(o => (
+                {pageItems.map(o => (
                   <tr
                     key={o.id}
                     className={selectedId === o.id ? 'row-selected' : ''}
@@ -75,6 +85,13 @@ export default function Orders() {
                 ))}
               </tbody>
             </table>
+
+            <div className="pagination">
+              <button disabled={page === 1} onClick={() => setPage(p => p - 1)}>‹</button>
+              <span className="pagination-current">{page}</span>
+              <span className="pagination-total">of {totalPages}</span>
+              <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>›</button>
+            </div>
           </div>
         </div>
 
